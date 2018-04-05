@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
-import { isAndroid } from "platform";
+import { isAndroid, screen, ScreenMetrics } from "platform";
+
 import { SelectedIndexChangedEventData, TabView, TabViewItem } from "tns-core-modules/ui/tab-view";
 
 @Component({
@@ -10,13 +11,13 @@ import { SelectedIndexChangedEventData, TabView, TabViewItem } from "tns-core-mo
 })
 export class TabsComponent implements OnInit {
 
+    tabSelectedIndex: number;
+
+    private _nativeTabsDisabled: boolean = false;
     private _title: string;
 
     constructor() {
-        /* ***********************************************************
-        * Use the constructor to inject app services that will be needed for
-        * the whole tab navigation layout as a whole.
-        *************************************************************/
+        this.tabSelectedIndex = 0;
     }
 
     ngOnInit(): void {
@@ -45,15 +46,34 @@ export class TabsComponent implements OnInit {
         return isAndroid ? "" : "res://tabIcons/" + icon;
     }
 
-    /* ***********************************************************
-    * Get the current tab view title and set it as an ActionBar title.
-    * Learn more about the onSelectedIndexChanged event here:
-    * https://docs.nativescript.org/cookbook/ui/tab-view#using-selectedindexchanged-event-from-xml
-    *************************************************************/
-    onSelectedIndexChanged(args: SelectedIndexChangedEventData) {
-        const tabView = <TabView>args.object;
-        const selectedTabViewItem = tabView.items[args.newIndex];
+    onTabsLoaded(tabView: TabView) {
+        console.log(
+            'Tabs loaded. Default tabs bar hidden? ' + this._nativeTabsDisabled
+        );
+        const screenScale = screen.mainScreen.scale;
+        if (!this._nativeTabsDisabled) {
+            if (tabView) {
+                if (tabView.android) {
+                    tabView.android.removeViewAt(0);
+                } else {
+                    tabView.ios.tabBar.hidden = true;
+                    const height = 0;
 
-        this.title = selectedTabViewItem.title;
+                    setTimeout(() => {
+                        console.log("stack.getMeasuredHeight: " + tabView.getMeasuredHeight());
+                        console.log("stack.getMeasuredWidth: " + tabView.getMeasuredWidth());
+
+                        const heightDP = tabView.getMeasuredHeight() / screenScale;
+                        const widthDP = tabView.getMeasuredWidth() / screenScale;
+                        console.log("heightDP: " + heightDP);
+                        console.log("widthDP: " + widthDP);
+
+                    }, 100);
+
+
+                }
+            }
+            this._nativeTabsDisabled = true;
+        }
     }
 }
